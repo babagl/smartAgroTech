@@ -80,3 +80,29 @@ sequenceDiagram
     Notif-->>Farmer: 🔔 Produit mis en vente
 
 ```
+
+## Lecture du scénario
+
+- Semis / début cycle
+
+- L’agriculteur déclare un cycle de culture.
+
+Les semences utilisées sont enregistrées (variété, fournisseur, quantité).
+
+Monitoring (suivi)
+
+À chaque étape, il enregistre des actions (arrosage, engrais, traitement, maladies, notes).
+
+Chaque suivi est stocké en base et indexé dans Elasticsearch pour analyse.
+
+Récolte
+
+L’agriculteur déclare la récolte (quantité, qualité).
+
+Cela clôture le cycle ou le marque comme “Récolté”.
+
+Mise en vente
+
+La récolte génère un produit disponible sur le marché numérique.
+
+Ce produit est ensuite visible pour les clients et marchés.
