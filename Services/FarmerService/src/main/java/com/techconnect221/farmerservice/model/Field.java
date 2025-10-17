@@ -22,17 +22,13 @@ public class Field {
 
     @Column(columnDefinition = "geometry(Polygon, 4326)")
     private Geometry geometry;
-
     private Double area;
     private Double perimeter;
     private String soilType;
     private String irrigationType;
-
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
     private UUID farmerId;  // Référence à Auth/User Service
-
     // ✅ Nouveau : un champ peut avoir plusieurs sous-parcelles
     @OneToMany(mappedBy = "field", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SubField> subFields = new ArrayList<>();
