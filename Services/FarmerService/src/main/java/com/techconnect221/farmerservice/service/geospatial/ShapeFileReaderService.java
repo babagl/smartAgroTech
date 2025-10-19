@@ -2,7 +2,9 @@ package com.techconnect221.farmerservice.service.geospatial;
 
 import com.techconnect221.farmerservice.service.helper.File.FileHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.Comment;
 import org.opengis.feature.simple.SimpleFeature;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.geotools.data.*;
 import org.geotools.data.simple.*;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
+@Service
 public class ShapeFileReaderService {
 
     public List<SimpleFeature> readFeatures(MultipartFile zipFile){
@@ -35,7 +38,6 @@ public class ShapeFileReaderService {
                     log.info("Reading feature source", source);
                     SimpleFeatureCollection collection = source.getFeatures();
                     log.info("Reading feature collection", collection);
-
                     int count = 0;
                     try(SimpleFeatureIterator iterator = collection.features()) {
                         while (iterator.hasNext()) {
@@ -51,7 +53,6 @@ public class ShapeFileReaderService {
                     }
                 }
             }
-
             log.info("📊 Total des entités combinées : {}", features);
             return features;
         }catch (Exception e){
