@@ -67,7 +67,7 @@ public class ShapefileReaderIntegrationTest {
             assertInstanceOf(List.class, response.getData(), "Les donnees doit etre une liste ");
 
             @SuppressWarnings("uncheked")
-            List<String> attributeValues = response.getData();
+            var attributeValues = response.getData();
 
             assertFalse(attributeValues.isEmpty(), "La liste des attributs ne doit pas être vide");
             log.info("Attributs détectés : {}", attributeValues);

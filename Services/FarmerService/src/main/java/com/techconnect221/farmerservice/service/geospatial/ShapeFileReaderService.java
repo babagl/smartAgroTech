@@ -18,8 +18,8 @@ import java.util.*;
 @Service
 public class ShapeFileReaderService {
 
-    public FarmerServiceResponse<List<String>> analyseShape(MultipartFile multipartFile) {
-        var reponse = new FarmerServiceResponse<List<String>>();
+    public FarmerServiceResponse<Map<String, Object>> analyseShape(MultipartFile multipartFile) {
+        var reponse = new FarmerServiceResponse<Map<String, Object>>();
         try {
             var features = readFeatures(multipartFile);
             if (features.isEmpty()){
@@ -35,14 +35,23 @@ public class ShapeFileReaderService {
             featureType.getAttributeDescriptors().forEach(attributeDescriptor -> {
                 attributes.add(attributeDescriptor.getLocalName());
             });
-            String geometryType = sample.getDefaultGeometry().getClass().getSimpleName();
+            List<Map<String, Object>> simpleData = new ArrayList<>();
+            for (int i = 0; i < Math.min(features.size(), 5); i++) {
+                SimpleFeature f = features.get(i);
+                Map<String, Object> row = new LinkedHashMap<>();
+                f.getProperties().forEach(p-> row.put(p.getName().toString(), p.getValue()));
+                simpleData.add(row);
+            }
+
+            String geometryType =  sample.getDefaultGeometry().getClass().getSimpleName() ;
             Map<String, Object> attributesMap = new LinkedHashMap<>();
             attributesMap.put("attributes", attributes);
             attributesMap.put("geometryType", geometryType);
             attributesMap.put("count", features.size());
+            attributesMap.put("sampleData", simpleData);
 
             reponse.setSuccess(true);
-            reponse.setData(attributes);
+            reponse.setData(attributesMap);
             reponse.setMessage("Analyse réussie");
             reponse.setStatus(HttpStatus.ACCEPTED);
             reponse.setDebugMessage(null);
