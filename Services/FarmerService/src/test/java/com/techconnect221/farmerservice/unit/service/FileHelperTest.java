@@ -16,7 +16,7 @@ public class FileHelperTest {
 
     @Test
     void shouldUnzipFileCorrectly() {
-        File file = new File("src/test/resources/test.zip");
+        File file = new File("src/test/resources/delimitation4.zip");
         assertTrue(file.exists(), "File should exist");
         try(FileInputStream fis = new FileInputStream(file)) {
             File outputDir = FileHelper.unzipFile(fis);

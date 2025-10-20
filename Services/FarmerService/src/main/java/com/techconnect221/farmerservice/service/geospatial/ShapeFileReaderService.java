@@ -1,29 +1,70 @@
 package com.techconnect221.farmerservice.service.geospatial;
 
+import com.techconnect221.farmerservice.dto.Response.FarmerServiceResponse;
 import com.techconnect221.farmerservice.service.helper.File.FileHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.Comment;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.geotools.data.*;
 import org.geotools.data.simple.*;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
 public class ShapeFileReaderService {
 
+    public FarmerServiceResponse<List<String>> analyseShape(MultipartFile multipartFile) {
+        var reponse = new FarmerServiceResponse<List<String>>();
+        try {
+            var features = readFeatures(multipartFile);
+            if (features.isEmpty()){
+                reponse.setSuccess(false);
+                reponse.setMessage("Aucune entites trouve dans le shape");
+                reponse.setStatus(HttpStatus.NOT_ACCEPTABLE);
+                reponse.setData(null);
+                return FarmerServiceResponse.error("Le fichier test.zip est introuvable");
+            }
+            SimpleFeature sample = features.get(0);
+            SimpleFeatureType featureType = sample.getFeatureType();
+            List<String> attributes = new ArrayList<>();
+            featureType.getAttributeDescriptors().forEach(attributeDescriptor -> {
+                attributes.add(attributeDescriptor.getLocalName());
+            });
+            String geometryType = sample.getDefaultGeometry().getClass().getSimpleName();
+            Map<String, Object> attributesMap = new LinkedHashMap<>();
+            attributesMap.put("attributes", attributes);
+            attributesMap.put("geometryType", geometryType);
+            attributesMap.put("count", features.size());
+
+            reponse.setSuccess(true);
+            reponse.setData(attributes);
+            reponse.setMessage("Analyse réussie");
+            reponse.setStatus(HttpStatus.ACCEPTED);
+            reponse.setDebugMessage(null);
+
+            return reponse;
+        }catch (Exception e){
+            log.error("Erreur lors de l'analyse du shapefile", e);
+            reponse.setSuccess(false);
+            reponse.setDebugMessage(e.getMessage());
+            reponse.setStatus(HttpStatus.NOT_ACCEPTABLE);
+            reponse.setData(null);
+            return reponse;
+        }
+    }
+
+
     public List<SimpleFeature> readFeatures(MultipartFile zipFile){
         List<SimpleFeature> features = new ArrayList<>();
         try {
             File extractedFile = FileHelper.unzipFile(zipFile.getInputStream());
-            File[] shapeFiles = extractedFile.listFiles((dir, name) -> name.toLowerCase().endsWith(".shp"));
-            if (shapeFiles == null || shapeFiles.length == 0) throw new Exception("No shape files found");
+            List<File> shapeFiles = findShapeFiles(extractedFile);
+            if (shapeFiles.isEmpty()) throw new Exception("No shape files found");
 
             for (File shapeFile : shapeFiles) {
                 log.info("Reading shape file {}", shapeFile.getName());
@@ -53,11 +94,23 @@ public class ShapeFileReaderService {
                     }
                 }
             }
-            log.info("📊 Total des entités combinées : {}", features);
+            log.info(" Total des entités combinées : {}", features);
             return features;
         }catch (Exception e){
             log.error("Erreur lors de la lecture du shapefile",e.getMessage());
             throw new RuntimeException("Erreur lors de la lecture");
         }
+    }
+
+    private List<File> findShapeFiles(File directory){
+        List<File> shapeFiles = new ArrayList<>();
+        File[] files = directory.listFiles();
+        if (files != null ){
+            for (File file: files){
+                if (file.isDirectory()) shapeFiles.addAll(findShapeFiles(file));
+                else if (file.getName().toLowerCase().endsWith(".shp")) shapeFiles.add(file);
+            }
+        }
+        return shapeFiles;
     }
 }
